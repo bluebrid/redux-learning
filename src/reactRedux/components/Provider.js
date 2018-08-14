@@ -20,41 +20,44 @@ function warnAboutReceivingStore() {
 }
 
 export function createProvider(storeKey = 'store') {
-    const subscriptionKey = `${storeKey}Subscription`
+  const subscriptionKey = `${storeKey}Subscription`
 
-    class Provider extends Component {
-        getChildContext() {
-          return { [storeKey]: this[storeKey], [subscriptionKey]: null }
-        }
-
-        constructor(props, context) {
-          super(props, context)
-          this[storeKey] = props.store;
-        }
-
-        render() {
-          return Children.only(this.props.children)
-        }
-    }
-
-    if (process.env.NODE_ENV !== 'production') {
-      Provider.prototype.componentDidUpdate = function () {
-        if (this[storeKey] !== this.props.store) {
-          warnAboutReceivingStore()
-        }
+  class Provider extends Component {
+    getChildContext() {
+      return {
+        [storeKey]: this[storeKey],
+        [subscriptionKey]: null
       }
     }
 
-    Provider.propTypes = {
-        store: storeShape.isRequired,
-        children: PropTypes.element.isRequired,
-    }
-    Provider.childContextTypes = {
-        [storeKey]: storeShape.isRequired,
-        [subscriptionKey]: subscriptionShape,
+    constructor(props, context) {
+      super(props, context)
+      this[storeKey] = props.store;
     }
 
-    return Provider
+    render() {
+      return Children.only(this.props.children)
+    }
+  }
+
+  if (process.env.NODE_ENV !== 'production') {
+    Provider.prototype.componentDidUpdate = function () {
+      if (this[storeKey] !== this.props.store) {
+        warnAboutReceivingStore()
+      }
+    }
+  }
+
+  Provider.propTypes = {
+    store: storeShape.isRequired,
+    children: PropTypes.element.isRequired,
+  }
+  Provider.childContextTypes = {
+    [storeKey]: storeShape.isRequired,
+    [subscriptionKey]: subscriptionShape,
+  }
+
+  return Provider
 }
 
 export default createProvider()

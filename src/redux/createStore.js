@@ -2,7 +2,10 @@ import $$observable from 'symbol-observable'
 
 import ActionTypes from './utils/actionTypes'
 import isPlainObject from './utils/isPlainObject'
-
+/**
+ * 1,createStore, 传递reducer 和初始化状态
+ *  
+ */
 export default function createStore(reducer, preloadedState, enhancer) {
   if (typeof preloadedState === 'function' && typeof enhancer === 'undefined') {
     enhancer = preloadedState
@@ -13,7 +16,7 @@ export default function createStore(reducer, preloadedState, enhancer) {
     if (typeof enhancer !== 'function') {
       throw new Error('Expected the enhancer to be a function.')
     }
-
+    // 运行enhancer 
     return enhancer(createStore)(reducer, preloadedState)
   }
 
@@ -25,6 +28,7 @@ export default function createStore(reducer, preloadedState, enhancer) {
   let currentState = preloadedState
   let currentListeners = []
   let nextListeners = currentListeners
+  // 设置一个状态值，用来保存是否有一个dispatch 在执行，如果有dispatch 在执行，是不能获取state
   let isDispatching = false
 
   function ensureCanMutateNextListeners() {
@@ -32,18 +36,24 @@ export default function createStore(reducer, preloadedState, enhancer) {
       nextListeners = currentListeners.slice()
     }
   }
+  /**
+   * 最简单的操作，就是返回currentState
+   */
   function getState() {
     if (isDispatching) {
       throw new Error(
         'You may not call store.getState() while the reducer is executing. ' +
-          'The reducer has already received the state as an argument. ' +
-          'Pass it down from the top reducer instead of reading it from the store.'
+        'The reducer has already received the state as an argument. ' +
+        'Pass it down from the top reducer instead of reading it from the store.'
       )
     }
 
     return currentState
   }
-
+  /**
+   *1,发布订阅者模式， 
+   *
+   */
   function subscribe(listener) {
     if (typeof listener !== 'function') {
       throw new Error('Expected the listener to be a function.')
@@ -52,9 +62,9 @@ export default function createStore(reducer, preloadedState, enhancer) {
     if (isDispatching) {
       throw new Error(
         'You may not call store.subscribe() while the reducer is executing. ' +
-          'If you would like to be notified after the store has been updated, subscribe from a ' +
-          'component and invoke store.getState() in the callback to access the latest state. ' +
-          'See https://redux.js.org/api-reference/store#subscribe(listener) for more details.'
+        'If you would like to be notified after the store has been updated, subscribe from a ' +
+        'component and invoke store.getState() in the callback to access the latest state. ' +
+        'See https://redux.js.org/api-reference/store#subscribe(listener) for more details.'
       )
     }
 
@@ -71,7 +81,7 @@ export default function createStore(reducer, preloadedState, enhancer) {
       if (isDispatching) {
         throw new Error(
           'You may not unsubscribe from a store listener while the reducer is executing. ' +
-            'See https://redux.js.org/api-reference/store#subscribe(listener) for more details.'
+          'See https://redux.js.org/api-reference/store#subscribe(listener) for more details.'
         )
       }
 
@@ -82,19 +92,24 @@ export default function createStore(reducer, preloadedState, enhancer) {
       nextListeners.splice(index, 1)
     }
   }
-
+  /**
+   * 1，dispatch方法，需要传递一个action.
+   * 2, action 必须包含type 属性
+   * 3，   
+   */
   function dispatch(action) {
+    debugger
     if (!isPlainObject(action)) {
       throw new Error(
         'Actions must be plain objects. ' +
-          'Use custom middleware for async actions.'
+        'Use custom middleware for async actions.'
       )
     }
 
     if (typeof action.type === 'undefined') {
       throw new Error(
         'Actions may not have an undefined "type" property. ' +
-          'Have you misspelled a constant?'
+        'Have you misspelled a constant?'
       )
     }
 
@@ -104,11 +119,12 @@ export default function createStore(reducer, preloadedState, enhancer) {
 
     try {
       isDispatching = true
+      // 调用Reduce 对action 进行处理，每次传入原始的state.返回更新后的states
       currentState = currentReducer(currentState, action)
     } finally {
       isDispatching = false
     }
-
+    // 对订阅者进行处理
     const listeners = (currentListeners = nextListeners)
     for (let i = 0; i < listeners.length; i++) {
       const listener = listeners[i]
@@ -131,7 +147,7 @@ export default function createStore(reducer, preloadedState, enhancer) {
   function observable() {
     const outerSubscribe = subscribe
     return {
-     
+
       subscribe(observer) {
         if (typeof observer !== 'object' || observer === null) {
           throw new TypeError('Expected the observer to be an object.')
@@ -153,9 +169,15 @@ export default function createStore(reducer, preloadedState, enhancer) {
       }
     }
   }
-
+  // 初始化执行一次
   dispatch({ type: ActionTypes.INIT })
-
+  /**
+   * 1，createStore 暴露出五个接口，其中常用的就是三个
+   * 2，dispatch:
+   * 3，subscribe:
+   * 4，getState:
+   * 5, replaceReducer:
+   */
   return {
     dispatch,
     subscribe,

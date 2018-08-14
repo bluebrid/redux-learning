@@ -6,15 +6,21 @@ import rootReducer from '../reducers'
 import DevTools from '../containers/DevTools'
 
 const configureStore = preloadedState => {
+  // const store = createStore(
+  //   rootReducer,
+  //   preloadedState,
+  //   compose(
+  //     applyMiddleware(thunk, api, createLogger()),
+  //     DevTools.instrument()
+  //   )
+  // )
   const store = createStore(
     rootReducer,
     preloadedState,
     compose(
-      applyMiddleware(thunk, api, createLogger()),
-      DevTools.instrument()
+      applyMiddleware(thunk, api),
     )
   )
-
   if (module.hot) {
     // Enable Webpack hot module replacement for reducers
     module.hot.accept('../reducers', () => {

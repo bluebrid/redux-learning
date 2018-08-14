@@ -35,12 +35,6 @@ export default class Explore extends Component {
   }
 
   handleGoClick = () => {
-    debugger
-    this.setState({
-      a: 1
-    }, () => {
-      console.log(this.status)
-    })
     this.props.onChange(this.getInputValue())
   }
 

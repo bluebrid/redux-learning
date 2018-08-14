@@ -15,3 +15,11 @@ render(
     console.log('redner end.')
   }
 )
+store.subscribe(function() {
+  console.log('======================1:')
+  console.log(store.getState())
+})
+store.subscribe(function() {
+  console.log('======================2:')
+  console.log(store.getState())
+})
