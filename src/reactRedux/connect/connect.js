@@ -62,16 +62,9 @@ export function createConnect({
     const initMergeProps = match(mergeProps, mergePropsFactories, 'mergeProps')
 
     return connectHOC(selectorFactory, {
-      // used in error messages
       methodName: 'connect',
-
-       // used to compute Connect's displayName from the wrapped component's displayName.
       getDisplayName: name => `Connect(${name})`,
-
-      // if mapStateToProps is falsy, the Connect component doesn't subscribe to store state changes
       shouldHandleStateChanges: Boolean(mapStateToProps),
-
-      // passed through to selectorFactory
       initMapStateToProps,
       initMapDispatchToProps,
       initMergeProps,
@@ -80,8 +73,6 @@ export function createConnect({
       areOwnPropsEqual,
       areStatePropsEqual,
       areMergedPropsEqual,
-
-      // any extra options args can override defaults of connect or connectAdvanced
       ...extraOptions
     })
   }

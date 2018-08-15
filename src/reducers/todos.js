@@ -9,7 +9,7 @@ import {
 
 const initialState = [
   {
-    text: 'Use Redux',
+    text: 'a',
     completed: false,
     id: 0
   }

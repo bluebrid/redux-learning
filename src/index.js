@@ -1,6 +1,7 @@
 import React from 'react'
 import { render } from 'react-dom'
 import { createStore } from './redux'
+//import { Provider } from 'react-redux'
 import { Provider } from './reactRedux'
 import App from './components/App'
 import reducer from './reducers'
@@ -14,3 +15,6 @@ render(
   </Provider>,
   document.getElementById('root')
 )
+store.subscribe(function() {
+  console.log(store.getState())
+})

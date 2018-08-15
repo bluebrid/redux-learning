@@ -1,5 +1,5 @@
-import { connect } from '../reactRedux'
 import { bindActionCreators } from '../redux'
+import { connect } from 'react-redux' // Why 
 import * as TodoActions from '../actions'
 import TodoList from '../components/TodoList'
 import { getVisibleTodos } from '../selectors'
