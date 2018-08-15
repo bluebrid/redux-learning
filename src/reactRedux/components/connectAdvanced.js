@@ -94,7 +94,7 @@ export default function connectAdvanced(
 
   return function wrapWithConnect(WrappedComponent) {
     invariant(
-      typeof WrappedComponent == 'function',
+      typeof WrappedComponent === 'function',
       `You must pass a component to the function returned by ` +
       `${methodName}. Instead received ${JSON.stringify(WrappedComponent)}`
     )

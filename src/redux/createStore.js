@@ -16,7 +16,7 @@ export default function createStore(reducer, preloadedState, enhancer) {
     if (typeof enhancer !== 'function') {
       throw new Error('Expected the enhancer to be a function.')
     }
-    // 运行enhancer 
+    // 运行enhancer, 一般enhancer 就是一组中间件
     return enhancer(createStore)(reducer, preloadedState)
   }
 
@@ -98,7 +98,6 @@ export default function createStore(reducer, preloadedState, enhancer) {
    * 3，   
    */
   function dispatch(action) {
-    debugger
     if (!isPlainObject(action)) {
       throw new Error(
         'Actions must be plain objects. ' +

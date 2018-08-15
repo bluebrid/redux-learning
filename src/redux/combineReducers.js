@@ -96,6 +96,10 @@ function assertReducerShape(reducers) {
   })
 }
 
+/**
+ * 1,合并Reduces
+ * @param {*} reducers 
+ */
 export default function combineReducers(reducers) {
   const reducerKeys = Object.keys(reducers)
   const finalReducers = {}
@@ -149,6 +153,9 @@ export default function combineReducers(reducers) {
       const key = finalReducerKeys[i]
       const reducer = finalReducers[key]
       const previousStateForKey = state[key]
+      if (action.type === 'USER_REQUEST' && key === 'entities') {
+        console.log(key)
+      }
       const nextStateForKey = reducer(previousStateForKey, action)
       if (typeof nextStateForKey === 'undefined') {
         const errorMessage = getUndefinedStateErrorMessage(key, action)
