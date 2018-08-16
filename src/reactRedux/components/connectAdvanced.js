@@ -7,7 +7,7 @@ import Subscription from '../utils/Subscription'
 import { storeShape, subscriptionShape } from '../utils/PropTypes'
 
 let hotReloadingVersion = 0
-function noop() {}
+function noop() { }
 function makeUpdater(sourceSelector, store) {
   return function updater(props, prevState) {
     try {
@@ -151,8 +151,11 @@ export default function connectAdvanced(
         if (this.isUnmounted) {
           return
         }
+        // 监听到Redux 中的status 变更, 然后调用setState
+        this.setState(prevState => {
+         return  prevState.updater(this.props, prevState)
+        }, callback)
 
-        this.setState(prevState => prevState.updater(this.props, prevState), callback)
       }
 
       initSubscription() {
@@ -202,7 +205,7 @@ export default function connectAdvanced(
         // We are hot reloading!
         if (this.version !== version) {
           this.version = version
- 
+
           let oldListeners = [];
 
           if (this.subscription) {
@@ -216,7 +219,7 @@ export default function connectAdvanced(
           }
 
           const updater = this.createUpdater()
-          this.setState({updater})
+          this.setState({ updater })
           this.runUpdater()
         }
       }
