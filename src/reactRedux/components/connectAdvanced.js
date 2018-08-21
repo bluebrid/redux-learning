@@ -42,6 +42,19 @@ export default function connectAdvanced(
     withRef = false,
     ...connectOptions
   } = {}
+  /*
+   {
+      initMapStateToProps,
+      initMapDispatchToProps,
+      initMergeProps,
+      pure,
+      areStatesEqual,
+      areOwnPropsEqual,
+      areStatePropsEqual,
+      areMergedPropsEqual,
+      ...extraOptions
+    }
+  */
 ) {
   const subscriptionKey = storeKey + 'Subscription'
   const version = hotReloadingVersion++
@@ -100,7 +113,7 @@ export default function connectAdvanced(
           `"${displayName}". Either wrap the root component in a <Provider>, ` +
           `or explicitly pass "${storeKey}" as a prop to "${displayName}".`
         )
-
+        // 一开始就设置了updater
         this.state = {
           updater: this.createUpdater()
         }
@@ -143,6 +156,8 @@ export default function connectAdvanced(
       }
 
       createUpdater() {
+        // ======================================================================================> 
+        //这里将dispatch方法传递到mapDispatchToProps.js 方法中。
         const sourceSelector = selectorFactory(this.store.dispatch, selectorFactoryOptions)
         return makeUpdater(sourceSelector, this.store)
       }

@@ -23,11 +23,12 @@ import defaultSelectorFactory from './selectorFactory'
  */
 
 function match(arg, factories, name) {
+  // factories 是mapDispatchToProps.js 和mapStateToProps.js 中的定义的一组方法，所以
   for (let i = factories.length - 1; i >= 0; i--) {
     const result = factories[i](arg)
     if (result) return result
   }
-
+  
   return (dispatch, options) => {
     throw new Error(`Invalid value of type ${typeof arg} for ${name} argument when connecting component ${options.wrappedComponentName}.`)
   }
@@ -58,7 +59,10 @@ export function createConnect({
     } = {}
   ) {
     const initMapStateToProps = match(mapStateToProps, mapStateToPropsFactories, 'mapStateToProps')
+    // mapDispatchToProps： 是在组建中传递的action 函数
+    debugger
     const initMapDispatchToProps = match(mapDispatchToProps, mapDispatchToPropsFactories, 'mapDispatchToProps')
+    debugger
     const initMergeProps = match(mergeProps, mergePropsFactories, 'mergeProps')
 
     return connectHOC(selectorFactory, {

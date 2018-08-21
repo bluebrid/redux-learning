@@ -1,9 +1,14 @@
 import verifyPlainObject from '../utils/verifyPlainObject'
 
 export function wrapMapToPropsConstant(getConstant) {
+  // getConstant 是个方法:
+  /**
+   * 其中mapDispatchToProps 就是组建调用connect 传递来的对象
+   * (dispatch => bindActionCreators(mapDispatchToProps, dispatch)
+   */
   return function initConstantSelector(dispatch, options) {
     const constant = getConstant(dispatch, options)
-
+    debugger
     function constantSelector() { return constant }
     constantSelector.dependsOnOwnProps = false 
     return constantSelector
