@@ -28,7 +28,7 @@ function match(arg, factories, name) {
     const result = factories[i](arg)
     if (result) return result
   }
-  
+
   return (dispatch, options) => {
     throw new Error(`Invalid value of type ${typeof arg} for ${name} argument when connecting component ${options.wrappedComponentName}.`)
   }
@@ -60,9 +60,16 @@ export function createConnect({
   ) {
     const initMapStateToProps = match(mapStateToProps, mapStateToPropsFactories, 'mapStateToProps')
     // mapDispatchToProps： 是在组建中传递的action 函数
-    debugger
     const initMapDispatchToProps = match(mapDispatchToProps, mapDispatchToPropsFactories, 'mapDispatchToProps')
-    debugger
+    /*
+      result is : 
+      function initConstantSelector(dispatch, options) {
+        const constant = getConstant(dispatch, options)
+        function constantSelector() { return constant }
+        constantSelector.dependsOnOwnProps = false 
+        return constantSelector
+      }
+    */
     const initMergeProps = match(mergeProps, mergePropsFactories, 'mergeProps')
 
     return connectHOC(selectorFactory, {

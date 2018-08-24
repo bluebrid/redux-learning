@@ -11,6 +11,7 @@ function noop() { }
 function makeUpdater(sourceSelector, store) {
   return function updater(props, prevState) {
     try {
+      // 将所有的mapStateToProps 和 mapDispatchToProps 封装到props中
       const nextProps = sourceSelector(store.getState(), props)
       if (nextProps !== prevState.props || prevState.error) {
         return {
@@ -42,19 +43,6 @@ export default function connectAdvanced(
     withRef = false,
     ...connectOptions
   } = {}
-  /*
-   {
-      initMapStateToProps,
-      initMapDispatchToProps,
-      initMergeProps,
-      pure,
-      areStatesEqual,
-      areOwnPropsEqual,
-      areStatePropsEqual,
-      areMergedPropsEqual,
-      ...extraOptions
-    }
-  */
 ) {
   const subscriptionKey = storeKey + 'Subscription'
   const version = hotReloadingVersion++
@@ -113,7 +101,29 @@ export default function connectAdvanced(
           `"${displayName}". Either wrap the root component in a <Provider>, ` +
           `or explicitly pass "${storeKey}" as a prop to "${displayName}".`
         )
-        // 一开始就设置了updater
+        // 一开始就设置了updater, updater 是如下function
+        /**
+         *   return function updater(props, prevState) {
+              try {
+                const nextProps = sourceSelector(store.getState(), props)
+                if (nextProps !== prevState.props || prevState.error) {
+                  return {
+                    shouldComponentUpdate: true,
+                    props: nextProps,
+                    error: null,
+                  }
+                }
+                return {
+                  shouldComponentUpdate: false,
+                }
+              } catch (error) {
+                return {
+                  shouldComponentUpdate: true,
+                  error,
+                }
+              }
+            }
+         */
         this.state = {
           updater: this.createUpdater()
         }
@@ -128,6 +138,7 @@ export default function connectAdvanced(
       componentDidMount() {
         if (!shouldHandleStateChanges) return
         this.subscription.trySubscribe()
+        debugger
         this.runUpdater()
       }
 
@@ -158,7 +169,16 @@ export default function connectAdvanced(
       createUpdater() {
         // ======================================================================================> 
         //这里将dispatch方法传递到mapDispatchToProps.js 方法中。
+        // selectorFactory.js => finalPropsSelectorFactory
         const sourceSelector = selectorFactory(this.store.dispatch, selectorFactoryOptions)
+        // sourceSelector 返回的是一个function :
+        /**
+         *   return function pureFinalPropsSelector(nextState, nextOwnProps) {
+              return hasRunAtLeastOnce
+                ? handleSubsequentCalls(nextState, nextOwnProps)
+                : handleFirstCall(nextState, nextOwnProps)
+            }
+         */
         return makeUpdater(sourceSelector, this.store)
       }
 
