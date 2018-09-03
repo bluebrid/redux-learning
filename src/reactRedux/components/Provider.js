@@ -24,7 +24,6 @@ export function createProvider(storeKey = 'store') {
 
   class Provider extends Component {
     getChildContext() {
-      console.log('getChildContext')
       return {
         [storeKey]: this[storeKey],
         [subscriptionKey]: null
@@ -34,18 +33,15 @@ export function createProvider(storeKey = 'store') {
     constructor(props, context) {
       super(props, context)
       this[storeKey] = props.store;
-      console.log('constructor')
     }
 
     render() {
-      console.log('render')
       return Children.only(this.props.children)
     }
   }
 
   if (process.env.NODE_ENV !== 'production') {
     Provider.prototype.componentDidUpdate = function () {
-      console.log('componentDidUpdate')
       if (this[storeKey] !== this.props.store) {
         warnAboutReceivingStore()
       }

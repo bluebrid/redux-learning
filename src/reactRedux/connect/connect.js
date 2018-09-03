@@ -23,7 +23,6 @@ import defaultSelectorFactory from './selectorFactory'
  */
 
 function match(arg, factories, name) {
-  // factories 是mapDispatchToProps.js 和mapStateToProps.js 中的定义的一组方法，所以
   for (let i = factories.length - 1; i >= 0; i--) {
     const result = factories[i](arg)
     if (result) return result
@@ -59,23 +58,20 @@ export function createConnect({
     } = {}
   ) {
     const initMapStateToProps = match(mapStateToProps, mapStateToPropsFactories, 'mapStateToProps')
-    // mapDispatchToProps： 是在组建中传递的action 函数
     const initMapDispatchToProps = match(mapDispatchToProps, mapDispatchToPropsFactories, 'mapDispatchToProps')
-    /*
-      result is : 
-      function initConstantSelector(dispatch, options) {
-        const constant = getConstant(dispatch, options)
-        function constantSelector() { return constant }
-        constantSelector.dependsOnOwnProps = false 
-        return constantSelector
-      }
-    */
     const initMergeProps = match(mergeProps, mergePropsFactories, 'mergeProps')
 
     return connectHOC(selectorFactory, {
+      // used in error messages
       methodName: 'connect',
+
+       // used to compute Connect's displayName from the wrapped component's displayName.
       getDisplayName: name => `Connect(${name})`,
+
+      // if mapStateToProps is falsy, the Connect component doesn't subscribe to store state changes
       shouldHandleStateChanges: Boolean(mapStateToProps),
+
+      // passed through to selectorFactory
       initMapStateToProps,
       initMapDispatchToProps,
       initMergeProps,
@@ -84,6 +80,8 @@ export function createConnect({
       areOwnPropsEqual,
       areStatePropsEqual,
       areMergedPropsEqual,
+
+      // any extra options args can override defaults of connect or connectAdvanced
       ...extraOptions
     })
   }

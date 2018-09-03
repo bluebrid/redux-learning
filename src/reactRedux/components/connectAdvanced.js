@@ -7,11 +7,10 @@ import Subscription from '../utils/Subscription'
 import { storeShape, subscriptionShape } from '../utils/PropTypes'
 
 let hotReloadingVersion = 0
-function noop() { }
+function noop() {}
 function makeUpdater(sourceSelector, store) {
   return function updater(props, prevState) {
     try {
-      // 将所有的mapStateToProps 和 mapDispatchToProps 封装到props中
       const nextProps = sourceSelector(store.getState(), props)
       if (nextProps !== prevState.props || prevState.error) {
         return {
@@ -33,19 +32,54 @@ function makeUpdater(sourceSelector, store) {
 }
 
 export default function connectAdvanced(
+  /*
+    selectorFactory is a func that is responsible for returning the selector function used to
+    compute new props from state, props, and dispatch. For example:
+
+      export default connectAdvanced((dispatch, options) => (state, props) => ({
+        thing: state.things[props.thingId],
+        saveThing: fields => dispatch(actionCreators.saveThing(props.thingId, fields)),
+      }))(YourComponent)
+
+    Access to dispatch is provided to the factory so selectorFactories can bind actionCreators
+    outside of their selector as an optimization. Options passed to connectAdvanced are passed to
+    the selectorFactory, along with displayName and WrappedComponent, as the second argument.
+
+    Note that selectorFactory is responsible for all caching/memoization of inbound and outbound
+    props. Do not use connectAdvanced directly without memoizing results between calls to your
+    selector, otherwise the Connect component will re-render on every state or props change.
+  */
   selectorFactory,
+  // options object:
   {
+    // the func used to compute this HOC's displayName from the wrapped component's displayName.
+    // probably overridden by wrapper functions such as connect()
     getDisplayName = name => `ConnectAdvanced(${name})`,
+
+    // shown in error messages
+    // probably overridden by wrapper functions such as connect()
     methodName = 'connectAdvanced',
+
+    // if defined, the name of the property passed to the wrapped element indicating the number of
+    // calls to render. useful for watching in react devtools for unnecessary re-renders.
     renderCountProp = undefined,
+
+    // determines whether this HOC subscribes to store changes
     shouldHandleStateChanges = true,
+
+    // the key of props/context to get the store
     storeKey = 'store',
+
+    // if true, the wrapped element is exposed by this HOC via the getWrappedInstance() function.
     withRef = false,
+
+    // additional options are passed through to the selectorFactory
     ...connectOptions
   } = {}
 ) {
   const subscriptionKey = storeKey + 'Subscription'
   const version = hotReloadingVersion++
+
   const contextTypes = {
     [storeKey]: storeShape,
     [subscriptionKey]: subscriptionShape,
@@ -57,10 +91,10 @@ export default function connectAdvanced(
   function getDerivedStateFromProps(nextProps, prevState) {
     return prevState.updater(nextProps, prevState)
   }
-  // 传入的组件，也就是需要进行加工处理的组建
+
   return function wrapWithConnect(WrappedComponent) {
     invariant(
-      typeof WrappedComponent === 'function',
+      typeof WrappedComponent == 'function',
       `You must pass a component to the function returned by ` +
       `${methodName}. Instead received ${JSON.stringify(WrappedComponent)}`
     )
@@ -68,7 +102,6 @@ export default function connectAdvanced(
     const wrappedComponentName = WrappedComponent.displayName
       || WrappedComponent.name
       || 'Component'
-    console.log('=======================>', wrappedComponentName)
 
     const displayName = getDisplayName(wrappedComponentName)
 
@@ -91,7 +124,6 @@ export default function connectAdvanced(
 
         this.version = version
         this.renderCount = 0
-        // 从context 中获取redux store.
         this.store = props[storeKey] || context[storeKey]
         this.propsMode = Boolean(props[storeKey])
         this.setWrappedInstance = this.setWrappedInstance.bind(this)
@@ -101,29 +133,7 @@ export default function connectAdvanced(
           `"${displayName}". Either wrap the root component in a <Provider>, ` +
           `or explicitly pass "${storeKey}" as a prop to "${displayName}".`
         )
-        // 一开始就设置了updater, updater 是如下function
-        /**
-         *   return function updater(props, prevState) {
-              try {
-                const nextProps = sourceSelector(store.getState(), props)
-                if (nextProps !== prevState.props || prevState.error) {
-                  return {
-                    shouldComponentUpdate: true,
-                    props: nextProps,
-                    error: null,
-                  }
-                }
-                return {
-                  shouldComponentUpdate: false,
-                }
-              } catch (error) {
-                return {
-                  shouldComponentUpdate: true,
-                  error,
-                }
-              }
-            }
-         */
+
         this.state = {
           updater: this.createUpdater()
         }
@@ -131,14 +141,24 @@ export default function connectAdvanced(
       }
 
       getChildContext() {
+        // If this component received store from props, its subscription should be transparent
+        // to any descendants receiving store+subscription from context; it passes along
+        // subscription passed to it. Otherwise, it shadows the parent subscription, which allows
+        // Connect to control ordering of notifications to flow top-down.
         const subscription = this.propsMode ? null : this.subscription
         return { [subscriptionKey]: subscription || this.context[subscriptionKey] }
       }
 
       componentDidMount() {
         if (!shouldHandleStateChanges) return
+
+        // componentWillMount fires during server side rendering, but componentDidMount and
+        // componentWillUnmount do not. Because of this, trySubscribe happens during ...didMount.
+        // Otherwise, unsubscription would never take place during SSR, causing a memory leak.
+        // To handle the case where a child component may have triggered a state change by
+        // dispatching an action in its componentWillMount, we have to re-run the select and maybe
+        // re-render.
         this.subscription.trySubscribe()
-        debugger
         this.runUpdater()
       }
 
@@ -167,18 +187,7 @@ export default function connectAdvanced(
       }
 
       createUpdater() {
-        // ======================================================================================> 
-        //这里将dispatch方法传递到mapDispatchToProps.js 方法中。
-        // selectorFactory.js => finalPropsSelectorFactory
         const sourceSelector = selectorFactory(this.store.dispatch, selectorFactoryOptions)
-        // sourceSelector 返回的是一个function :
-        /**
-         *   return function pureFinalPropsSelector(nextState, nextOwnProps) {
-              return hasRunAtLeastOnce
-                ? handleSubsequentCalls(nextState, nextOwnProps)
-                : handleFirstCall(nextState, nextOwnProps)
-            }
-         */
         return makeUpdater(sourceSelector, this.store)
       }
 
@@ -186,19 +195,24 @@ export default function connectAdvanced(
         if (this.isUnmounted) {
           return
         }
-        // 监听到Redux 中的status 变更, 然后调用setState
-        this.setState(prevState => {
-         return  prevState.updater(this.props, prevState)
-        }, callback)
 
+        this.setState(prevState => prevState.updater(this.props, prevState), callback)
       }
 
       initSubscription() {
         if (!shouldHandleStateChanges) return
 
+        // parentSub's source should match where store came from: props vs. context. A component
+        // connected to the store via props shouldn't use subscription from context, or vice versa.
         const parentSub = (this.propsMode ? this.props : this.context)[subscriptionKey]
-        // Subscription 利用Redux 的store 的subscribe方法进行监听status 的变更。
         this.subscription = new Subscription(this.store, parentSub, this.onStateChange.bind(this))
+
+        // `notifyNestedSubs` is duplicated to handle the case where the component is  unmounted in
+        // the middle of the notification loop, where `this.subscription` will then be null. An
+        // extra null check every change can be avoided by copying the method onto `this` and then
+        // replacing it with a no-op on unmount. This can probably be avoided if Subscription's
+        // listeners logic is changed to not call listeners that have been unsubscribed in the
+        // middle of the notification loop.
         this.notifyNestedSubs = this.subscription.notifyNestedSubs.bind(this.subscription)
       }
 
@@ -212,6 +226,10 @@ export default function connectAdvanced(
 
       addExtraProps(props) {
         if (!withRef && !renderCountProp && !(this.propsMode && this.subscription)) return props
+        // make a shallow copy so that fields added don't leak to the original selector.
+        // this is especially important for 'ref' since that's a reference back to the component
+        // instance. a singleton memoized selector would then be holding a reference to the
+        // instance, preventing the instance from being garbage collected, and that would be bad
         const withExtras = { ...props }
         if (withRef) withExtras.ref = this.setWrappedInstance
         if (renderCountProp) withExtras[renderCountProp] = this.renderCount++
@@ -241,6 +259,11 @@ export default function connectAdvanced(
         if (this.version !== version) {
           this.version = version
 
+          // If any connected descendants don't hot reload (and resubscribe in the process), their
+          // listeners will be lost when we unsubscribe. Unfortunately, by copying over all
+          // listeners, this does mean that the old versions of connected descendants will still be
+          // notified of state changes; however, their onStateChange function is a no-op so this
+          // isn't a huge deal.
           let oldListeners = [];
 
           if (this.subscription) {
@@ -254,7 +277,7 @@ export default function connectAdvanced(
           }
 
           const updater = this.createUpdater()
-          this.setState({ updater })
+          this.setState({updater})
           this.runUpdater()
         }
       }

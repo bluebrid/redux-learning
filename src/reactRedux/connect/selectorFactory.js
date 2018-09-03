@@ -104,29 +104,13 @@ export default function finalPropsSelectorFactory(dispatch, {
   ...options
 }) {
   const mapStateToProps = initMapStateToProps(dispatch, options)
-  /**
-   * initMapDispatchToProps 是如下的function: 从wrapMapToProps.js 返回的
-   * function initConstantSelector(dispatch, options) {
-      const constant = getConstant(dispatch, options)
-      function constantSelector() { return constant }
-      constantSelector.dependsOnOwnProps = false 
-      return constantSelector
-  }
-  其中： getConstant 方法是如下fuction:
-  从mapDispatchToProps.js whenMapDispatchToPropsIsObject 返回的
-  (dispatch => bindActionCreators(mapDispatchToProps, dispatch)
-  mapDispatchToProps是connect 一开始传递进来的的对象
-  constant就是bindActionCreators 返回的对象，每个key 对应的value是: function() {
-    return dispatch(actionCreator.apply(this, arguments))
-  }
-   */
   const mapDispatchToProps = initMapDispatchToProps(dispatch, options)
-  // 所以mapDispatchToProps 就是一个对象
   const mergeProps = initMergeProps(dispatch, options)
 
   if (process.env.NODE_ENV !== 'production') {
     verifySubselectors(mapStateToProps, mapDispatchToProps, mergeProps, options.displayName)
   }
+
   const selectorFactory = options.pure
     ? pureFinalPropsSelectorFactory
     : impureFinalPropsSelectorFactory
