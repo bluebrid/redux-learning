@@ -7,7 +7,7 @@ export function wrapMapToPropsConstant(getConstant) {
    * (dispatch => bindActionCreators(mapDispatchToProps, dispatch)
    */
   return function initConstantSelector(dispatch, options) {
-    const constant = getConstant(dispatch, options)
+    const constant = getConstant(dispatch, options) // => 会调用 bindActionCreators
     function constantSelector() { return constant }
     constantSelector.dependsOnOwnProps = false 
     return constantSelector

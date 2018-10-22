@@ -4,9 +4,9 @@ import PropTypes from 'prop-types'
 import TodoTextInput from '../components/TodoTextInput'
 import { addTodo } from '../actions'
 
-export const Header = ({ addTodo }) => (
+export const Header = ({ addTodo, title}) => (
   <header className="header">
-    <h1>ToDo</h1>
+     <h1>{title}</h1> 
     <TodoTextInput
       newTodo
       onSave={(text) => {
@@ -20,7 +20,13 @@ export const Header = ({ addTodo }) => (
 )
 
 Header.propTypes = {
-  addTodo: PropTypes.func.isRequired
+  addTodo: PropTypes.func.isRequired,
+  title: PropTypes.string.isRequired
 }
-
-export default connect(null, { addTodo })(Header)
+const mapStateToProps = (state, ownProps) => {
+  console.log(state)
+  return {
+    title:  state.title
+  }
+}
+export default connect(mapStateToProps, { addTodo })(Header)

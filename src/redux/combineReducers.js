@@ -99,6 +99,10 @@ function assertReducerShape(reducers) {
 /**
  * 1,合并Reduces
  * @param {*} reducers 
+ * const rootReducer = combineReducers({
+  todos,
+  visibilityFilter
+})
  */
 export default function combineReducers(reducers) {
   const reducerKeys = Object.keys(reducers)

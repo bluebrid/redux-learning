@@ -12,6 +12,23 @@ function makeUpdater(sourceSelector, store) {
   return function updater(props, prevState) {
     try {
       // 将所有的mapStateToProps 和 mapDispatchToProps 封装到props中
+      // 其中 mapDispatchToProps 会将所有的方法用dispatch 包裹如：
+      /**
+       * return function() {
+          return dispatch(actionCreator.apply(this, arguments))
+        }
+        如addTODO = function {
+          return dispatch(addTODO.apply(this, arguments))
+        }
+        其中dispatch 就是store.dispatch 
+        dispatch 会通知所有的订阅者， 而connectAdvanced组件在componentDidMount事件中对store进行了订阅， 
+        其this.runUpdater()会调用setState, 然后就会重新render 所有的组件
+         componentDidMount() {
+          if (!shouldHandleStateChanges) return
+          this.subscription.trySubscribe()
+          this.runUpdater()
+        }
+       */
       const nextProps = sourceSelector(store.getState(), props)
       if (nextProps !== prevState.props || prevState.error) {
         return {
@@ -138,7 +155,6 @@ export default function connectAdvanced(
       componentDidMount() {
         if (!shouldHandleStateChanges) return
         this.subscription.trySubscribe()
-        debugger
         this.runUpdater()
       }
 
