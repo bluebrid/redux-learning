@@ -5,7 +5,10 @@ import visibilityFilter from './visibilityFilter'
 
 const rootReducer = combineReducers({
   todos,
-  visibilityFilter
+  visibilityFilter,
+  title: () => {
+    return 'This is a title'
+  }
 })
 
 export default rootReducer

@@ -135,6 +135,7 @@ export default function combineReducers(reducers) {
   }
 
   return function combination(state = {}, action) {
+    // debugger
     if (shapeAssertionError) {
       throw shapeAssertionError
     }
@@ -157,6 +158,12 @@ export default function combineReducers(reducers) {
       const key = finalReducerKeys[i]
       const reducer = finalReducers[key]
       const previousStateForKey = state[key]
+     /**
+      * const rootReducer = combineReducers({
+          todos,
+          visibilityFilter
+        })
+      */
       if (action.type === 'USER_REQUEST' && key === 'entities') {
         console.log(key)
       }
@@ -168,6 +175,7 @@ export default function combineReducers(reducers) {
       nextState[key] = nextStateForKey
       hasChanged = hasChanged || nextStateForKey !== previousStateForKey
     }
+    // 将覆盖
     return hasChanged ? nextState : state
   }
 }

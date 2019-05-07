@@ -21,12 +21,13 @@ export const Header = ({ addTodo, title}) => (
 
 Header.propTypes = {
   addTodo: PropTypes.func.isRequired,
-  title: PropTypes.string.isRequired
+ //  title: PropTypes.string.isRequired
 }
 const mapStateToProps = (state, ownProps) => {
-  console.log(state)
+  console.log('=======================')
   return {
     title:  state.title
   }
 }
-export default connect(mapStateToProps, { addTodo })(Header)
+const hoc =  connect(mapStateToProps, { addTodo })
+export default hoc(Header)

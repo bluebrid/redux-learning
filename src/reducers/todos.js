@@ -16,6 +16,7 @@ const initialState = [
 ]
 
 export default function todos(state = initialState, action) {
+  // debugger
   switch (action.type) {
     case ADD_TODO:
       return [
